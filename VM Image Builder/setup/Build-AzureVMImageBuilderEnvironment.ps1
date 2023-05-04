@@ -159,5 +159,7 @@ function Build-AzureVMImageBuilderEnvironment {
         New-Item -Path . -Name "windows_11_gen2_generic" -ItemType Directory
         Move-Item -Path "./windows_11_gen2_generic.json" -Destination "./windows_11_gen2_generic/windows_11_gen2_generic.json"
         Write-Output "You can now proceed to building the image, use the generated template in the '$TemplateFilePath' variable."
+        # Delete the avib role definition templates.
+        Remove-Item -Path ./avib_role_image_creation.json, ./avib_role_network_join.json
     }
 }
