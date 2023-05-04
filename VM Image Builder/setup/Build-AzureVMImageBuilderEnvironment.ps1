@@ -24,7 +24,7 @@
     Date            Author      V       Notes
     04/05/2023      PP          1.0     First release
 #>
-function Build-AzureVMImageBuilder {
+function Build-AzureVMImageBuilderEnvironment {
     [CmdletBinding()]
     param (
         $Location = "uksouth",
@@ -46,7 +46,7 @@ function Build-AzureVMImageBuilder {
 
     begin {
         # Copy templates from the templates folder.
-        Get-ChildItem -Path "./templates" | Copy-item -Destination .
+        Get-ChildItem -Path "./templates" | Copy-item -Destination "."
         # Set the TLS version.
         $TLS12Protocol = [System.Net.SecurityProtocolType] 'Tls12'
         [System.Net.ServicePointManager]::SecurityProtocol = $TLS12Protocol
@@ -155,6 +155,9 @@ function Build-AzureVMImageBuilder {
     }
 
     end {
-
+        # Make a copy of the image template for reference later when you run Build-Image.ps1 function.
+        New-Item -Path . -Name "windows_11_gen2_generic" -ItemType Directory
+        Move-Item -Path "./windows_11_gen2_generic.json" -Destination "./windows_11_gen2_generic/windows_11_gen2_generic.json"
+        Write-Output "You can now proceed to building the image, use the generated template in the '$TemplateFilePath' variable."
     }
 }

@@ -44,7 +44,7 @@ function Build-Image {
         [parameter(Mandatory)]
         [string]$ImageResourceGroup,
         [parameter(Mandatory)]
-        [string]$TemplateFilePath, # Use the previously generated template path, found under templates in this repository.
+        [string]$TemplateFilePath, # Use the previously generated template path, the file will be under the name windows_11_gen2_generic.
         [string]$ImageTemplateName = "windows_11_gen2_generic_v" + $($BuildVersion),
         [parameter(Mandatory)]
         [string]$ImageStagingResourceGroup
