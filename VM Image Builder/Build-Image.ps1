@@ -16,14 +16,14 @@
 .PARAMETER ImageResourceGroup
     Resource group where the template is going to be placed in, this group should contain all of your core AVIB resources.
 .PARAMETER TemplateFilePath
-    Path to the .JSON template. This will be appended with the specified $BuildVersion, example: "windows_11_gen2_integration_developer_v" + 1.0.0 will equal to windows_11_gen2_integration_developer_v1.0.0.
+    Path to the .JSON template. This will be appended with the specified $BuildVersion, example: "windows_11_gen2_generic_v" + 1.0.0 will equal to windows_11_gen2_generic_v1.0.0.
     I suggest editing the parameter value to hard-code the first part of the name. This function can be re-used with multiple builds for different purposes.
 .PARAMETER ImageTemplateName
     Unique name of the template that will be submitted.
 .PARAMETER ImageStagingResourceGroup
     Name of the staging resource group where the temporary resources will be placed.
 .EXAMPLE
-    PS C:\> Build-Image -BuildVersion "1.0.1" -Location uksouth -ImageResourceGroup rg-developer-vmimagebuilder -TemplateFilePath ".\windows_11_gen2_integration_developer.json" -ImageStagingResourceGroup rg-developer-vmimagebuilder-staging
+    PS C:\> Build-Image -BuildVersion "1.0.1" -Location uksouth -ImageResourceGroup rg-vmimagebuilder -TemplateFilePath ".\windows_11_gen2_generic.json" -ImageStagingResourceGroup rg-vmimagebuilder-staging
     Explanation of what the example does
 .NOTES
     Author: Patryk Podlas
@@ -44,7 +44,7 @@ function Build-Image {
         [parameter(Mandatory)]
         [string]$ImageResourceGroup,
         [parameter(Mandatory)]
-        [string]$TemplateFilePath,
+        [string]$TemplateFilePath, # Use the previously generated template path, found under templates in this repository.
         [string]$ImageTemplateName = "windows_11_gen2_generic_v" + $($BuildVersion),
         [parameter(Mandatory)]
         [string]$ImageStagingResourceGroup
