@@ -97,13 +97,13 @@ function Build-AzureVMImageBuilderEnvironment {
         }
 
         # Create a resource group for all the resources related to Azure VM Image Builder.
-        New-AzResourceGroup -Name $ImageResourceGroup -Location $Location
+        Write-Output "Creating resource group: $ImageResourceGroup" ; New-AzResourceGroup -Name $ImageResourceGroup -Location $Location
         # Create a staging resource for the temporary resources created as part of the image build process.
-        New-AzResourceGroup -Name $StagingImageResourceGroup -Location $Location
+        Write-Output "Creating resource group: $StagingImageResourceGroup" ; New-AzResourceGroup -Name $StagingImageResourceGroup -Location $Location
         # Create Azure Compute Gallery.
-        New-AzGallery -GalleryName $ComputeGalleryName -ResourceGroupName $ImageResourceGroup -Location $Location
+        Write-Output "Creating Azure Compute Gallery: $ComputeGalleryName in resource group $ImageResourceGroup" ; New-AzGallery -GalleryName $ComputeGalleryName -ResourceGroupName $ImageResourceGroup -Location $Location
         # Create Azure Compute Gallery image definition.
-        New-AzGalleryImageDefinition @GalleryParameters
+        Write-Output "Creating Azure Compute Gallery image definition: $ImageDefinitionName" ; New-AzGalleryImageDefinition @GalleryParameters
         # Configure networking.
         New-AzNetworkSecurityGroup -Name $NSGName -ResourceGroupName $vNetResourceGroupName -Location $Location
         $NSG = Get-AzNetworkSecurityGroup -Name $NSGName -ResourceGroupName $vNetResourceGroupName
