@@ -1,0 +1,100 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "imageTemplateName": {
+            "type": "string"
+        },
+        "api-version": {
+            "type": "string"
+        },
+        "svclocation": {
+            "type": "string"
+        },
+        "buildversion": {
+            "type": "string"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "name": "[parameters('imageTemplateName')]",
+            "type": "Microsoft.VirtualMachineImages/imageTemplates",
+            "apiVersion": "[parameters('api-version')]",
+            "location": "[parameters('svclocation')]",
+            "dependsOn": [],
+            "tags": {
+                "imagebuilderTemplate": "AzureImageBuilderSIG",
+                "userIdentity": "enabled"
+            },
+            "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "/subscriptions/<subscriptionID>/resourcegroups/<rgName>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<umiName>": {}
+                }
+            },
+            "properties": {
+                "stagingResourceGroup": "/subscriptions/<subscriptionID>/resourcegroups/<stagingrgName>",
+                "VirtualNetworkConfig": {
+                    "name": "<vnetName>",
+                    "subnetName": "<subnetName>",
+                    "resourceGroupName": "<vnetRgName>"
+                },
+                "buildTimeoutInMinutes": 120,
+                "vmProfile": {
+                    "vmSize": "Standard_D2ds_v4",
+                    "osDiskSizeGB": 127,
+                    "vnetConfig": {
+                        "proxyVmSize": "Standard_D2ds_v4",
+                        "subnetId": "/subscriptions/<subscriptionID>/resourceGroups/<stagingrgName>/providers/Microsoft.Network/virtualNetworks/<vnetName>/subnets/<subnetName>"
+                    }
+                },
+                "source": {
+                    "type": "PlatformImage",
+                    "publisher": "microsoftvisualstudio",
+                    "offer": "visualstudio2019latest",
+                    "sku": "vs-2019-ent-latest-win11-n-gen2",
+                    "version": "latest"
+                },
+                "customize": [
+                    {
+                        "type": "PowerShell",
+                        "name": "InstallWinGet",
+                        "scriptUri": "https://stwmazdevuks002.blob.core.windows.net/vmib-scripts/install_winget.ps1",
+                        "runElevated": true,
+                        "runAsSystem": true
+                    },
+                    {
+                        "type": "PowerShell",
+                        "name": "InstallApps",
+                        "scriptUri": "https://stwmazdevuks002.blob.core.windows.net/integration-developer/install_apps.ps1",
+                        "runElevated": true,
+                        "runAsSystem": true
+                    },
+                    {
+                        "type": "WindowsUpdate",
+                        "searchCriteria": "IsInstalled=0",
+                        "filters": [
+                            "exclude:$_.Title -like '*Preview*'",
+                            "include:$true"
+                        ],
+                        "updateLimit": 40
+                    }
+                ],
+                "distribute": [
+                    {
+                        "type": "SharedImage",
+                        "galleryImageId": "[concat('/subscriptions/<subscriptionID>/resourceGroups/<rgName>/providers/Microsoft.Compute/galleries/<galleryName>/images/<imageDefinitionName>/versions/', parameters('buildversion'))]",
+                        "runOutputName": "<runOutputName>",
+                        "artifactTags": {
+                            "baseosimg": "vs-2019-ent-latest-win11-n-gen2"
+                        },
+                        "replicationRegions": [
+                            "uksouth"
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}

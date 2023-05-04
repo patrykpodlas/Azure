@@ -45,7 +45,7 @@ function Build-Image {
         [string]$ImageResourceGroup,
         [parameter(Mandatory)]
         [string]$TemplateFilePath,
-        [string]$ImageTemplateName = "windows_11_gen2_integration_developer_v" + $($BuildVersion),
+        [string]$ImageTemplateName = "windows_11_gen2_generic_v" + $($BuildVersion),
         [parameter(Mandatory)]
         [string]$ImageStagingResourceGroup
     )
