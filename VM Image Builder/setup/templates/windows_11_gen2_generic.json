@@ -60,14 +60,14 @@
                     {
                         "type": "PowerShell",
                         "name": "InstallWinGet",
-                        "scriptUri": "https://stwmazdevuks002.blob.core.windows.net/vmib-scripts/install_winget.ps1",
+                        "scriptUri": "",
                         "runElevated": true,
                         "runAsSystem": true
                     },
                     {
                         "type": "PowerShell",
                         "name": "InstallApps",
-                        "scriptUri": "https://stwmazdevuks002.blob.core.windows.net/integration-developer/install_apps.ps1",
+                        "scriptUri": "",
                         "runElevated": true,
                         "runAsSystem": true
                     },
