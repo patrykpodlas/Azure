@@ -51,9 +51,9 @@
                 },
                 "source": {
                     "type": "PlatformImage",
-                    "publisher": "microsoftvisualstudio",
-                    "offer": "visualstudio2019latest",
-                    "sku": "vs-2019-ent-latest-win11-n-gen2",
+                    "publisher": "MicrosoftWindowsDesktop",
+                    "offer": "windows-10",
+                    "sku": "win10-22h2-pro-g2",
                     "version": "latest"
                 },
                 "customize": [
@@ -73,7 +73,7 @@
                         "galleryImageId": "[concat('/subscriptions/<subscriptionID>/resourceGroups/<rgName>/providers/Microsoft.Compute/galleries/<galleryName>/images/<imageDefinitionName>/versions/', parameters('buildversion'))]",
                         "runOutputName": "<runOutputName>",
                         "artifactTags": {
-                            "baseosimg": "vs-2019-ent-latest-win11-n-gen2"
+                            "baseosimg": "win10-22h2-pro-g2"
                         },
                         "replicationRegions": [
                             "uksouth"

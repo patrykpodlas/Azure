@@ -3,8 +3,8 @@
     Builds the environment for Azure VM Image Builder.
 .DESCRIPTION
     Builds the environment for Azure VM Image Builder. This function, builds the entire environment using best practises.
-        - Uses a staging group
-        - Uses private networking
+    - Uses a staging group
+    - Uses private networking
     - Registers the required providers.
     - Configures a new vNET and NSG, as well as the required security rule configuration, sets the privateLinkServiceNetworkPolicies to disabled.
     - Creates Azure Compute Gallery and Image Definition (Gen2)
@@ -33,9 +33,12 @@ function Build-AzureVMImageBuilderEnvironment {
         $vNetResourceGroupName = "rg-vmimagebuilder", # Can be different if you wish to create the vNET in a different resource group.
         $ComputeGalleryName = "cgvmibimages", # Compute gallery name.
         $ImageDefinitionName = "windows_11_gen2_generic", # Name of the image definition within the image gallery.
+        $TemplateFilePath = "windows_11_gen2_generic.json",
         $VMGeneration = "V2",
         $ImageRoleDefinitionName = "Developer Azure Image Builder Image Definition",
+        $AVIBRoleImageCreationPath = "avib_role_image_creation.json",
         $NetworkRoleDefinitionName = "Developer Azure Image Builder Network Definition",
+        $AVIBRoleNetworkJoinPath = "avib_role_network_join.json",
         $IdentityName = "umi-vmimagebuilder",
         $RunOutputName = "windows_11_gen2_generic", # Name of the output to manipulate later, I suggest it to be the same as the definition name, with perhaps the version name.
         $vNETName = "vnet-vmimagebuilder",
@@ -114,11 +117,6 @@ function Build-AzureVMImageBuilderEnvironment {
         ($VirtualNetwork | Select-Object -ExpandProperty subnets | Where-Object { $_.Name -eq $SubnetName } ).privateLinkServiceNetworkPolicies = "Disabled"
         $VirtualNetwork | Set-AzVirtualNetwork
 
-        # Set the paths for the .JSON file templates.
-        $TemplateFilePath = "windows_11_gen2_generic.json"
-        $AVIBRoleNetworkJoinPath = "avib_role_network_join.json"
-        $AVIBRoleImageCreationPath = "avib_role_image_creation.json"
-
         # Update image template .JSON file.
         ((Get-Content -Path $TemplateFilePath -Raw) -replace '<subscriptionID>', $SubscriptionID) | Set-Content -Path $TemplateFilePath
         ((Get-Content -Path $TemplateFilePath -Raw) -replace '<rgName>', $ImageResourceGroup) | Set-Content -Path $TemplateFilePath
@@ -152,6 +150,7 @@ function Build-AzureVMImageBuilderEnvironment {
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $NetworkRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$vNetResourceGroupName"
         # Assign the Contributor role to the Azure VM Image Builder App on the staging resource group scope.
         New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
+        New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup"
     }
 
     end {

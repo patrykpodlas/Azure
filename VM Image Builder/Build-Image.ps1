@@ -113,3 +113,5 @@ function Build-Image {
         }
     }
 }
+
+Build-Image -BuildVersion "1.0.7" -Location uksouth -ImageResourceGroup "rg-vmimagebuilder" -ImageStagingResourceGroup "rg-vmimagebuilder-staging" -TemplateFilePath "/Users/patrykpodlas/Library/CloudStorage/OneDrive-Personal/GitHub/Azure/VM Image Builder/setup/windows_11_gen2_generic/windows_11_gen2_generic.json"
