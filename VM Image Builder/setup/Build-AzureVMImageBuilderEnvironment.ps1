@@ -32,15 +32,15 @@ function Build-AzureVMImageBuilderEnvironment {
         $StagingImageResourceGroup = "rg-vmimagebuilder-staging",
         $vNetResourceGroupName = "rg-vmimagebuilder", # Can be different if you wish to create the vNET in a different resource group.
         $ComputeGalleryName = "cgvmibimages", # Compute gallery name.
-        $ImageDefinitionName = "windows_11_gen2_generic", # Name of the image definition within the image gallery.
-        $TemplateFilePath = "windows_11_gen2_generic.json",
+        $ImageDefinitionName = "windows_10_pro_gen2_generic", # Name of the image definition within the image gallery.
+        $TemplateFilePath = "windows_10_pro_gen2_generic.json",
         $VMGeneration = "V2",
         $ImageRoleDefinitionName = "Developer Azure Image Builder Image Definition",
         $AVIBRoleImageCreationPath = "avib_role_image_creation.json",
         $NetworkRoleDefinitionName = "Developer Azure Image Builder Network Definition",
         $AVIBRoleNetworkJoinPath = "avib_role_network_join.json",
         $IdentityName = "umi-vmimagebuilder",
-        $RunOutputName = "windows_11_gen2_generic", # Name of the output to manipulate later, I suggest it to be the same as the definition name, with perhaps the version name.
+        $RunOutputName = "windows_10_pro_gen2_generic", # Name of the output to manipulate later, I suggest it to be the same as the definition name, with perhaps the version name.
         $vNETName = "vnet-vmimagebuilder",
         $SubnetName = "snet-vnet-vmimagebuilder",
         $NSGName = "nsg-snet-vmimagebuilder",
@@ -77,7 +77,7 @@ function Build-AzureVMImageBuilderEnvironment {
             OsState           = 'generalized'
             OsType            = 'Windows'
             Publisher         = $CompanyName
-            Offer             = 'windows_11_gen2' # Specify the offering, for example windows_11_gen2 or windows_10_gen1.
+            Offer             = 'windows_10_pro_gen2' # Specify the offering, for example windows_11_gen2 or windows_10_gen1.
             Sku               = 'generic' # Specify the SKU this is going to be under, for example: developer, or end-user.
             HyperVGeneration  = $VMGeneration
         }
@@ -155,8 +155,8 @@ function Build-AzureVMImageBuilderEnvironment {
 
     end {
         # Make a copy of the image template for reference later when you run Build-Image.ps1 function.
-        New-Item -Path . -Name "windows_11_gen2_generic" -ItemType Directory
-        Move-Item -Path "./windows_11_gen2_generic.json" -Destination "./windows_11_gen2_generic/windows_11_gen2_generic.json"
+        New-Item -Path . -Name "windows_10_pro_gen2_generic" -ItemType Directory
+        Move-Item -Path "./windows_10_pro_gen2_generic.json" -Destination "./windows_10_pro_gen2_generic/windows_10_pro_gen2_generic.json"
         Write-Output "You can now proceed to building the image, use the generated template in the '$TemplateFilePath' variable."
         # Delete the avib role definition templates.
         Remove-Item -Path ./avib_role_image_creation.json, ./avib_role_network_join.json
