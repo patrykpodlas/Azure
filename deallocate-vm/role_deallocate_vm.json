@@ -1,0 +1,19 @@
+{
+    "properties": {
+        "roleName": "Deallocate VM when user logs off",
+        "description": "This custom role will allow your virtual machines to be deallocated when the user logs off.",
+        "assignableScopes": [
+            "/subscriptions/<SubscriptionID"
+        ],
+        "permissions": [
+            {
+                "actions": [
+                    "Microsoft.Compute/virtualMachines/deallocate/action"
+                ],
+                "notActions": [],
+                "dataActions": [],
+                "notDataActions": []
+            }
+        ]
+    }
+}
