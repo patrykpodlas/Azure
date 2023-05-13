@@ -1,5 +1,7 @@
 # VM Image Builder
 Build an entire VM Image Builder environment, using best practises.
+## How to use
+1. 
 # Deallocate VM
 Used to automatically de-allocate VM in Azure when user logs off.
 ## How to use

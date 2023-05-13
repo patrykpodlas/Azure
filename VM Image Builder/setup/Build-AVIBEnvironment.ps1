@@ -20,15 +20,15 @@ Build-AVIBEnvironment `
     -StagingImageResourceGroup "rg-vmimagebuilder-staging" `
     -vNetResourceGroup "rg-vmimagebuilder" ` # Can be different if you wish to create the vNET in a different resource group.
     -GalleryName "cgvmibimages" ` # Compute gallery name.
-    -ImageDefinitionName "windows_10_pro_gen2_generic" ` # Name of the image definition within the image gallery.
-    -TemplateFilePath "windows_10_pro_gen2_generic.json" `
+    -ImageDefinitionName "windows_11_gen2_generic" ` # Name of the image definition within the image gallery.
+    -TemplateFilePath "windows_11_gen2_generic.json" `
     -VMGeneration "V2" `
     -ImageRoleDefinitionName "Developer Azure Image Builder Image Definition" `
     -AVIBRoleImageCreationPath "avib_role_image_creation.json" `
     -NetworkRoleDefinitionName "Developer Azure Image Builder Network Definition" `
     -AVIBRoleNetworkJoinPath "avib_role_network_join.json" `
     -IdentityName "umi-vmimagebuilder" `
-    -RunOutputName "windows_10_pro_gen2_generic" ` # Name of the output to manipulate later, I suggest it to be the same as the definition name, with perhaps the version name.
+    -RunOutputName "windows_11_gen2_generic" ` # Name of the output to manipulate later, I suggest it to be the same as the definition name, with perhaps the version name.
     -vNETName "vnet-vmimagebuilder" `
     -SubnetName "snet-vnet-vmimagebuilder" `
     -NSGName =nsg-snet-vmimagebuilder" `
@@ -49,15 +49,14 @@ function Build-AVIBEnvironment {
         $StagingImageResourceGroup = "rg-vmimagebuilder-staging",
         $vNetResourceGroup = "rg-vmimagebuilder", # Can be different if you wish to create the vNET in a different resource group.
         $GalleryName = "cgvmibimages", # Compute gallery name.
-        $ImageDefinitionName = "windows_10_pro_gen2_generic", # Name of the image definition within the image gallery.
-        $TemplateFilePath = "windows_10_pro_gen2_generic.json",
+        $ImageDefinitionName = "windows_11_gen2_generic", # Name of the image definition within the image gallery.
+        $TemplateFilePath = "windows_11_gen2_generic.json",
         $VMGeneration = "V2",
         $ImageRoleDefinitionName = "Developer Azure Image Builder Image Definition",
         $AVIBRoleImageCreationPath = "avib_role_image_creation.json",
         $NetworkRoleDefinitionName = "Developer Azure Image Builder Network Definition",
         $AVIBRoleNetworkJoinPath = "avib_role_network_join.json",
         $IdentityName = "umi-vmimagebuilder",
-        $RunOutputName = "windows_10_pro_gen2_generic", # Name of the output to manipulate later, I suggest it to be the same as the definition name, with perhaps the version name.
         $vNETName = "vnet-vmimagebuilder",
         $SubnetName = "snet-vnet-vmimagebuilder",
         $NSGName = "nsg-snet-vmimagebuilder",
@@ -96,7 +95,7 @@ function Build-AVIBEnvironment {
             OsState           = 'generalized'
             OsType            = 'Windows'
             Publisher         = $CompanyName
-            Offer             = 'windows_10_pro_gen2' # Specify the offering, for example windows_11_gen2 or windows_10_gen1.
+            Offer             = 'windows_11_gen2' # Specify the offering, for example windows_11_gen2 or windows_10_gen1.
             Sku               = 'generic' # Specify the SKU this is going to be under, for example: developer, or end-user.
             HyperVGeneration  = $VMGeneration
         }
