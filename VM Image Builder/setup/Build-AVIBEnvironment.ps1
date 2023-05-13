@@ -21,17 +21,16 @@ Build-AVIBEnvironment `
     -vNetResourceGroup "rg-vmimagebuilder" ` # Can be different if you wish to create the vNET in a different resource group.
     -GalleryName "cgvmibimages" ` # Compute gallery name.
     -ImageDefinitionName "windows_11_gen2_generic" ` # Name of the image definition within the image gallery.
-    -TemplateFilePath "windows_11_gen2_generic.json" `
     -VMGeneration "V2" `
     -ImageRoleDefinitionName "Developer Azure Image Builder Image Definition" `
-    -AVIBRoleImageCreationPath "avib_role_image_creation.json" `
     -NetworkRoleDefinitionName "Developer Azure Image Builder Network Definition" `
     -AVIBRoleNetworkJoinPath "avib_role_network_join.json" `
+    -AVIBRoleImageCreationPath "avib_role_image_creation.json" `
     -IdentityName "umi-vmimagebuilder" `
     -RunOutputName "windows_11_gen2_generic" ` # Name of the output to manipulate later, I suggest it to be the same as the definition name, with perhaps the version name.
     -vNETName "vnet-vmimagebuilder" `
     -SubnetName "snet-vnet-vmimagebuilder" `
-    -NSGName =nsg-snet-vmimagebuilder" `
+    -NSGName "nsg-snet-vmimagebuilder" `
     -CompanyName "Company" ` # Specify your company name.
 .NOTES
     Author: Patryk Podlas
@@ -44,23 +43,22 @@ Build-AVIBEnvironment `
 function Build-AVIBEnvironment {
     [CmdletBinding()]
     param (
-        $Location = "uksouth",
-        $ImageResourceGroup = "rg-vmimagebuilder",
-        $StagingImageResourceGroup = "rg-vmimagebuilder-staging",
-        $vNetResourceGroup = "rg-vmimagebuilder", # Can be different if you wish to create the vNET in a different resource group.
-        $GalleryName = "cgvmibimages", # Compute gallery name.
-        $ImageDefinitionName = "windows_11_gen2_generic", # Name of the image definition within the image gallery.
-        $TemplateFilePath = "windows_11_gen2_generic.json",
-        $VMGeneration = "V2",
-        $ImageRoleDefinitionName = "Developer Azure Image Builder Image Definition",
-        $AVIBRoleImageCreationPath = "avib_role_image_creation.json",
-        $NetworkRoleDefinitionName = "Developer Azure Image Builder Network Definition",
-        $AVIBRoleNetworkJoinPath = "avib_role_network_join.json",
-        $IdentityName = "umi-vmimagebuilder",
-        $vNETName = "vnet-vmimagebuilder",
-        $SubnetName = "snet-vnet-vmimagebuilder",
-        $NSGName = "nsg-snet-vmimagebuilder",
-        $CompanyName = "Company" # Specify your company name.
+        $Location
+        $ImageResourceGroup
+        $StagingImageResourceGroup
+        $vNetResourceGroup
+        $GalleryName
+        $ImageDefinitionName
+        $VMGeneration
+        $ImageRoleDefinitionName
+        $AVIBRoleImageCreationPath
+        $NetworkRoleDefinitionName
+        $AVIBRoleNetworkJoinPath
+        $IdentityName
+        $vNETName
+        $SubnetName
+        $NSGName
+        $CompanyName
     )
 
     begin {
