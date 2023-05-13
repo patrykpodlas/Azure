@@ -2,29 +2,32 @@
 .SYNOPSIS
     Submits the template to Azure VM Image Builder and initiates build operation.
 .DESCRIPTION
-    Submits the template to Azure VM Image Builder and initiates build operation. This function will automatically submit the template for build, with appropriate version number specified through the buildversion parameter.
-    It also checks for any existing template submissions that are in progress, which will prevent new builds if using a staging resource group.
-    A simple while statement keeps track of the progress, the entire process takes over an hour.
+    Submits the template to Azure VM Image Builder and initiates build operation. This function will automatically submit the template for build, with appropriate version number specified through the BuildVersion parameter.
+    It also checks for any existing template submissions that are in progress, which will prevent new builds if using a staging resource group, because it has to be empty.
+    A simple while statement keeps track of the progress, the entire process takes around 70 minutes.
     Checks for success of the build at the end.
     The templates can't be updated, each time a unique template name must be submitted, removing a previous template will free up this name.
     API version used: 2022-02-14, for a list of available API's visit: https://learn.microsoft.com/en-us/azure/templates/microsoft.virtualmachineimages/2022-02-14/imagetemplates?pivots=deployment-language-arm-template#arm-template-resource-definition
 .PARAMETER BuildVersion
-    Specify the build version, which will get passed onto the .JSON file, this ensures no random version by Azure is selected, I suggest using format of 1.0.1 as an example.
+    Specify the build version, which will get passed onto the .JSON file, this ensures no random version by Azure is chosen, I suggest using format of 1.0.1 as an example.
     The version must be unique each time a template is submitted.
-.PARAMETER Location
-    Location where the template is to be submitted to, such as uksouth.
 .PARAMETER ImageResourceGroup
     Resource group where the template is going to be placed in, this group should contain all of your core AVIB resources.
+.PARAMETER StagingImageResourceGroup
+    Name of the staging resource group where the temporary resources will be created by the service.
 .PARAMETER TemplateFilePath
     Path to the .JSON template. This will be appended with the specified $BuildVersion, example: "windows_11_gen2_generic_v" + 1.0.0 will equal to windows_11_gen2_generic_v1.0.0.
     I suggest editing the parameter value to hard-code the first part of the name. This function can be re-used with multiple builds for different purposes.
 .PARAMETER ImageTemplateName
     Unique name of the template that will be submitted.
-.PARAMETER ImageStagingResourceGroup
-    Name of the staging resource group where the temporary resources will be placed.
+    When running the function, replace the prefix of the template, it will then get concatenated with the version number entered.
+    This parameter must not be specified when running.
 .EXAMPLE
-    PS C:\> Build-Image -BuildVersion "1.0.1" -Location uksouth -ImageResourceGroup rg-vmimagebuilder -TemplateFilePath ".\windows_11_gen2_generic.json" -ImageStagingResourceGroup rg-vmimagebuilder-staging
-    Explanation of what the example does
+    Build-AVIBImage `
+        -BuildVersion "1.0.0" `
+        -ImageResourceGroup "rg-vmimagebuilder" `
+        -StagingImageResourceGroup "rg-vmimagebuilder-staging"
+        -TemplateFilePath "/Azure/VM Image Builder/windows_11_gen2_generic/windows_11_gen2_generic.json" `
 .NOTES
     Author: Patryk Podlas
     Created: 20/04/2023
@@ -32,22 +35,27 @@
     Change history:
     Date            Author      V       Notes
     20/04/2023      PP          1.0     First release
+    13/05/2023      PP          1.1     Few minor changes, removed the svclocation parameter as it was redundant.
 #>
 
 function Build-Image {
     [CmdletBinding()]
     param (
         [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string]$BuildVersion,
         [parameter(Mandatory)]
-        [string]$Location,
-        [parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
         [string]$ImageResourceGroup,
         [parameter(Mandatory)]
-        [string]$TemplateFilePath, # Use the previously generated template path, the file will be under the name windows_11_gen2_generic.
-        [string]$ImageTemplateName = "windows_11_gen2_generic_v" + $($BuildVersion),
+        [ValidateNotNullOrEmpty()]
+        [string]$StagingImageResourceGroup,
         [parameter(Mandatory)]
-        [string]$ImageStagingResourceGroup
+        [ValidateNotNullOrEmpty()]
+        [string]$TemplateFilePath, # Use the previously generated template path.
+        [ValidateNotNullOrEmpty()]
+        [string]$ImageTemplateName = "windows_11_gen2_generic_v" + $($BuildVersion) # This will be a parameter passed onto the .JSON file, and become the name of the template submitted to Azure VM Image Builder.
+
     )
 
     begin {
@@ -75,9 +83,9 @@ function Build-Image {
         }
         # Check for storage account existance in the resource group and delete it if present.
         if ($CurrentSubmissions.LastRunStatusRunState -notin $ListOfStatuses) {
-            if (Get-AzStorageAccount -ResourceGroupName $ImageStagingResourceGroup) {
+            if (Get-AzStorageAccount -ResourceGroupName $StagingImageResourceGroup) {
                 Write-Output "Temporary storage account is present in the resource group for troubleshooting purposes, are you sure you want to delete it?"
-                Get-AzStorageAccount -ResourceGroupName $ImageStagingResourceGroup | Remove-AzStorageAccount
+                Get-AzStorageAccount -ResourceGroupName $StagingImageResourceGroup | Remove-AzStorageAccount
             }
         }
     }
@@ -87,7 +95,6 @@ function Build-Image {
             -TemplateFile $TemplateFilePath `
             -TemplateParameterObject @{"api-Version" = $($APIVersion) ; "buildversion" = $($BuildVersion) } `
             -imageTemplateName $ImageTemplateName `
-            -svclocation $Location
 
         Start-AzImageBuilderTemplate `
             -ResourceGroupName $ImageResourceGroup `
@@ -113,5 +120,3 @@ function Build-Image {
         }
     }
 }
-
-Build-Image -BuildVersion "1.0.7" -Location uksouth -ImageResourceGroup "rg-vmimagebuilder" -ImageStagingResourceGroup "rg-vmimagebuilder-staging" -TemplateFilePath "/Users/patrykpodlas/Library/CloudStorage/OneDrive-Personal/GitHub/Azure/VM Image Builder/setup/windows_11_gen2_generic/windows_11_gen2_generic.json"

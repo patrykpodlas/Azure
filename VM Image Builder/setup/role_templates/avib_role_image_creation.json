@@ -13,6 +13,6 @@
     ],
     "NotActions": [],
     "AssignableScopes": [
-        "/subscriptions/<subscriptionID>/resourceGroups/<rgName>"
+        "/subscriptions/<SubscriptionID>/resourceGroups/<ImageResourceGroup>"
     ]
 }

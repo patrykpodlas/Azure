@@ -14,8 +14,25 @@
 .PARAMETER <name>
     Parameter explanation
 .EXAMPLE
-    PS C:\> <example usage>
-    Explanation of what the example does
+Build-AVIBEnvironment `
+    -Location "uksouth" `
+    -ImageResourceGroup "rg-vmimagebuilder" `
+    -StagingImageResourceGroup "rg-vmimagebuilder-staging" `
+    -vNetResourceGroup "rg-vmimagebuilder" ` # Can be different if you wish to create the vNET in a different resource group.
+    -GalleryName "cgvmibimages" ` # Compute gallery name.
+    -ImageDefinitionName "windows_10_pro_gen2_generic" ` # Name of the image definition within the image gallery.
+    -TemplateFilePath "windows_10_pro_gen2_generic.json" `
+    -VMGeneration "V2" `
+    -ImageRoleDefinitionName "Developer Azure Image Builder Image Definition" `
+    -AVIBRoleImageCreationPath "avib_role_image_creation.json" `
+    -NetworkRoleDefinitionName "Developer Azure Image Builder Network Definition" `
+    -AVIBRoleNetworkJoinPath "avib_role_network_join.json" `
+    -IdentityName "umi-vmimagebuilder" `
+    -RunOutputName "windows_10_pro_gen2_generic" ` # Name of the output to manipulate later, I suggest it to be the same as the definition name, with perhaps the version name.
+    -vNETName "vnet-vmimagebuilder" `
+    -SubnetName "snet-vnet-vmimagebuilder" `
+    -NSGName =nsg-snet-vmimagebuilder" `
+    -CompanyName "Company" ` # Specify your company name.
 .NOTES
     Author: Patryk Podlas
     Created: 04/05/2023
@@ -24,14 +41,14 @@
     Date            Author      V       Notes
     04/05/2023      PP          1.0     First release
 #>
-function Build-AzureVMImageBuilderEnvironment {
+function Build-AVIBEnvironment {
     [CmdletBinding()]
     param (
         $Location = "uksouth",
         $ImageResourceGroup = "rg-vmimagebuilder",
         $StagingImageResourceGroup = "rg-vmimagebuilder-staging",
-        $vNetResourceGroupName = "rg-vmimagebuilder", # Can be different if you wish to create the vNET in a different resource group.
-        $ComputeGalleryName = "cgvmibimages", # Compute gallery name.
+        $vNetResourceGroup = "rg-vmimagebuilder", # Can be different if you wish to create the vNET in a different resource group.
+        $GalleryName = "cgvmibimages", # Compute gallery name.
         $ImageDefinitionName = "windows_10_pro_gen2_generic", # Name of the image definition within the image gallery.
         $TemplateFilePath = "windows_10_pro_gen2_generic.json",
         $VMGeneration = "V2",
@@ -48,11 +65,13 @@ function Build-AzureVMImageBuilderEnvironment {
     )
 
     begin {
-        # Copy templates from the templates folder.
-        Get-ChildItem -Path "./templates" | Copy-item -Destination "."
         # Set the TLS version.
         $TLS12Protocol = [System.Net.SecurityProtocolType] 'Tls12'
         [System.Net.ServicePointManager]::SecurityProtocol = $TLS12Protocol
+
+        # Copy templates from the templates folder.
+        Get-ChildItem -Path "./role_templates" | Copy-item -Destination "."
+
         # Install required module and import it.
         Install-Module -Name Az.ManagedServiceIdentity -Confirm:$False -Force
         Import-Module -Name Az.ManagedServiceIdentity
@@ -70,7 +89,7 @@ function Build-AzureVMImageBuilderEnvironment {
             "Microsoft.KeyVault"
         )
         $GalleryParameters = @{
-            GalleryName       = $ComputeGalleryName
+            GalleryName       = $GalleryName
             ResourceGroupName = $ImageResourceGroup
             Location          = $Location
             Name              = $ImageDefinitionName
@@ -108,28 +127,14 @@ function Build-AzureVMImageBuilderEnvironment {
         # Create Azure Compute Gallery image definition.
         Write-Output "Creating Azure Compute Gallery image definition: $ImageDefinitionName" ; New-AzGalleryImageDefinition @GalleryParameters
         # Configure networking.
-        New-AzNetworkSecurityGroup -Name $NSGName -ResourceGroupName $vNetResourceGroupName -Location $Location
-        $NSG = Get-AzNetworkSecurityGroup -Name $NSGName -ResourceGroupName $vNetResourceGroupName
+        New-AzNetworkSecurityGroup -Name $NSGName -ResourceGroupName $vNetResourceGroup -Location $Location
+        $NSG = Get-AzNetworkSecurityGroup -Name $NSGName -ResourceGroupName $vNetResourceGroup
         $Subnet = New-AzVirtualNetworkSubnetConfig -Name $SubnetName -AddressPrefix "10.0.1.0/24" -PrivateLinkServiceNetworkPoliciesFlag "Disabled" -NetworkSecurityGroup $NSG
-        New-AzVirtualNetwork -Name $vNETName -ResourceGroupName $vNetResourceGroupName -Location $Location -AddressPrefix "10.0.0.0/16" -Subnet $Subnet
-        Get-AzNetworkSecurityGroup -Name $NSGName -ResourceGroupName $vNetResourceGroupName  | Add-AzNetworkSecurityRuleConfig -Name AzureImageBuilderAccess -Description "Allow Image Builder Private Link Access to Proxy VM" -Access Allow -Protocol Tcp -Direction Inbound -Priority 400 -SourceAddressPrefix AzureLoadBalancer -SourcePortRange * -DestinationAddressPrefix VirtualNetwork -DestinationPortRange 60000-60001 | Set-AzNetworkSecurityGroup
-        $VirtualNetwork = Get-AzVirtualNetwork -Name $vNETName -ResourceGroupName $vNetResourceGroupName
+        New-AzVirtualNetwork -Name $vNETName -ResourceGroupName $vNetResourceGroup -Location $Location -AddressPrefix "10.0.0.0/16" -Subnet $Subnet
+        Get-AzNetworkSecurityGroup -Name $NSGName -ResourceGroupName $vNetResourceGroup  | Add-AzNetworkSecurityRuleConfig -Name AzureImageBuilderAccess -Description "Allow Image Builder Private Link Access to Proxy VM" -Access Allow -Protocol Tcp -Direction Inbound -Priority 400 -SourceAddressPrefix AzureLoadBalancer -SourcePortRange * -DestinationAddressPrefix VirtualNetwork -DestinationPortRange 60000-60001 | Set-AzNetworkSecurityGroup
+        $VirtualNetwork = Get-AzVirtualNetwork -Name $vNETName -ResourceGroupName $vNetResourceGroup
         ($VirtualNetwork | Select-Object -ExpandProperty subnets | Where-Object { $_.Name -eq $SubnetName } ).privateLinkServiceNetworkPolicies = "Disabled"
         $VirtualNetwork | Set-AzVirtualNetwork
-
-        # Update image template .JSON file.
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<subscriptionID>', $SubscriptionID) | Set-Content -Path $TemplateFilePath
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<rgName>', $ImageResourceGroup) | Set-Content -Path $TemplateFilePath
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<stagingrgName>', $StagingImageResourceGroup) | Set-Content -Path $TemplateFilePath
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<region>', $Location) | Set-Content -Path $TemplateFilePath
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<runOutputName>', $runOutputName) | Set-Content -Path $TemplateFilePath
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<imageDefinitionName>', $ImageDefinitionName) | Set-Content -Path $TemplateFilePath
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<vnetName>', $vNETName) | Set-Content -Path $TemplateFilePath
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<subnetName>', $SubnetName) | Set-Content -Path $TemplateFilePath
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<vnetRgName>', $vNetResourceGroupName) | Set-Content -Path $TemplateFilePath
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<umiName>', $IdentityName) | Set-Content -Path $TemplateFilePath
-        ((Get-Content -Path $TemplateFilePath -Raw) -replace '<galleryName>', $ComputeGalleryName) | Set-Content -Path $TemplateFilePath
-
 
         # Create user managed identity.
         New-AzUserAssignedIdentity -ResourceGroupName $ImageResourceGroup -Name $IdentityName -Location $Location ; Start-Sleep -Seconds 60
@@ -138,27 +143,22 @@ function Build-AzureVMImageBuilderEnvironment {
         ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace 'Azure Image Builder Service Image Creation Role', $ImageRoleDefinitionName) | Set-Content -Path $AVIBRoleImageCreationPath
         ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace 'Azure Image Builder Service Networking Role', $NetworkRoleDefinitionName) | Set-Content -Path $AVIBRoleNetworkJoinPath
         # Update role definitions .JSON template file.
-        ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace '<subscriptionID>', $SubscriptionID) | Set-Content -Path $AVIBRoleNetworkJoinPath
-        ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace '<vnetRgName>', $vNetResourceGroupName) | Set-Content -Path $AVIBRoleNetworkJoinPath
-        ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace '<subscriptionID>', $SubscriptionID) | Set-Content -Path $AVIBRoleImageCreationPath
-        ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace '<rgName>', $ImageResourceGroup) | Set-Content -Path $AVIBRoleImageCreationPath
+        ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace '<SubscriptionID>', $SubscriptionID) | Set-Content -Path $AVIBRoleNetworkJoinPath
+        ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace '<vNETResourceGroup>', $vNetResourceGroup) | Set-Content -Path $AVIBRoleNetworkJoinPath
+        ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace '<SubscriptionID>', $SubscriptionID) | Set-Content -Path $AVIBRoleImageCreationPath
+        ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace '<ImageResourceGroup>', $ImageResourceGroup) | Set-Content -Path $AVIBRoleImageCreationPath
         # Create role definitions.
         New-AzRoleDefinition -InputFile  "./$AVIBRoleImageCreationPath"
         New-AzRoleDefinition -InputFile  "./$AVIBRoleNetworkJoinPath"
         # Assign the roles to the user managed identity.
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $ImageRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup"
-        New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $NetworkRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$vNetResourceGroupName"
+        New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $NetworkRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$vNetResourceGroup"
         # Assign the Contributor role to the Azure VM Image Builder App on the staging resource group scope.
-        New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
-        New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup"
+        #New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
+        #New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup"
     }
 
     end {
-        # Make a copy of the image template for reference later when you run Build-Image.ps1 function.
-        New-Item -Path . -Name "windows_10_pro_gen2_generic" -ItemType Directory
-        Move-Item -Path "./windows_10_pro_gen2_generic.json" -Destination "./windows_10_pro_gen2_generic/windows_10_pro_gen2_generic.json"
-        Write-Output "You can now proceed to building the image, use the generated template in the '$TemplateFilePath' variable."
-        # Delete the avib role definition templates.
-        Remove-Item -Path ./avib_role_image_creation.json, ./avib_role_network_join.json
+
     }
 }

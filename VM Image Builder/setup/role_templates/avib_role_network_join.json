@@ -8,6 +8,6 @@
     ],
     "NotActions": [],
     "AssignableScopes": [
-        "/subscriptions/<subscriptionID>/resourceGroups/<vnetRgName>"
+        "/subscriptions/<SubscriptionID>/resourceGroups/<vNETResourceGroup>"
     ]
 }

@@ -8,9 +8,6 @@
         "api-version": {
             "type": "string"
         },
-        "svclocation": {
-            "type": "string"
-        },
         "buildversion": {
             "type": "string"
         }
@@ -21,39 +18,39 @@
             "name": "[parameters('imageTemplateName')]",
             "type": "Microsoft.VirtualMachineImages/imageTemplates",
             "apiVersion": "[parameters('api-version')]",
-            "location": "[parameters('svclocation')]",
+            "location": "<Location>",
             "dependsOn": [],
             "tags": {
-                "imagebuilderTemplate": "AzureImageBuilderSIG",
+                "imagebuilderTemplate": "",
                 "userIdentity": "enabled"
             },
             "identity": {
                 "type": "UserAssigned",
                 "userAssignedIdentities": {
-                    "/subscriptions/<subscriptionID>/resourcegroups/<rgName>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<umiName>": {}
+                    "/subscriptions/<SubscriptionID>/resourcegroups/<ImageResourceGroup>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/<UserManagedIdentityName>": {}
                 }
             },
             "properties": {
-                "stagingResourceGroup": "/subscriptions/<subscriptionID>/resourcegroups/<stagingrgName>",
+                "stagingResourceGroup": "/subscriptions/<SubscriptionID>/resourcegroups/<StagingImageResourceGroup>",
                 "VirtualNetworkConfig": {
-                    "name": "<vnetName>",
-                    "subnetName": "<subnetName>",
-                    "resourceGroupName": "<vnetRgName>"
+                    "name": "<vNETName>",
+                    "subnetName": "<SubnetName>",
+                    "resourceGroupName": "<vNetResourceGroup>"
                 },
                 "buildTimeoutInMinutes": 120,
                 "vmProfile": {
                     "vmSize": "Standard_D2ds_v4",
                     "osDiskSizeGB": 127,
                     "vnetConfig": {
-                        "proxyVmSize": "Standard_D2ds_v4",
-                        "subnetId": "/subscriptions/<subscriptionID>/resourceGroups/<stagingrgName>/providers/Microsoft.Network/virtualNetworks/<vnetName>/subnets/<subnetName>"
+                        "proxyVmSize": "Standard_D1_v2",
+                        "subnetId": "/subscriptions/<SubscriptionID>/resourceGroups/<vNetResourceGroup>/providers/Microsoft.Network/virtualNetworks/<vNETName>/subnets/<SubnetName>"
                     }
                 },
                 "source": {
                     "type": "PlatformImage",
-                    "publisher": "microsoftvisualstudio",
-                    "offer": "visualstudio2019latest",
-                    "sku": "vs-2019-ent-latest-win11-n-gen2",
+                    "publisher": "MicrosoftWindowsDesktop",
+                    "offer": "windows-11",
+                    "sku": "win11-22h2-pro",
                     "version": "latest"
                 },
                 "customize": [
@@ -70,13 +67,13 @@
                 "distribute": [
                     {
                         "type": "SharedImage",
-                        "galleryImageId": "[concat('/subscriptions/<subscriptionID>/resourceGroups/<rgName>/providers/Microsoft.Compute/galleries/<galleryName>/images/<imageDefinitionName>/versions/', parameters('buildversion'))]",
-                        "runOutputName": "<runOutputName>",
+                        "galleryImageId": "[concat('/subscriptions/<SubscriptionID>/resourceGroups/<ImageResourceGroup>/providers/Microsoft.Compute/galleries/<GalleryName>/images/<ImageDefinitionName>/versions/', parameters('buildversion'))]",
+                        "runOutputName": "<RunOutputName>",
                         "artifactTags": {
-                            "baseosimg": "vs-2019-ent-latest-win11-n-gen2"
+                            "baseosimg": "win11-22h2-pro"
                         },
                         "replicationRegions": [
-                            "uksouth"
+                            "<Location>"
                         ]
                     }
                 ]
