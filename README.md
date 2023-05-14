@@ -2,7 +2,7 @@
 Build an entire VM Image Builder environment, using best practises.
 ## Using: Terraform
 For anyone dabbing into Terraform, you can recreate this environment using my Terraform module! Although without the template `Build-AVIBTemplate` and image creation `Build-AVIBImage`.
-Visit my Terraform repository for details.
+Visit my [Terraform repository](https://github.com/patrykpodlas/Terraform) for details.
 ## Using: PowerShell
 1. Start with `Build-AVIBEnvironment`, you can simply execute using the example, make sure you're in the `VM Image Builder/setup` directory.
 ``` powershell
