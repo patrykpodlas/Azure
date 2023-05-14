@@ -108,9 +108,6 @@ function Build-AVIBEnvironment {
     )
 
     begin {
-        Write-Output "All parameters:"
-        $PSBoundParameters.Keys | ForEach-Object { Write-Output "$_ = $($PSBoundParameters[$_])" }
-
         # Set the TLS version.
         $TLS12Protocol = [System.Net.SecurityProtocolType] 'Tls12'
         [System.Net.ServicePointManager]::SecurityProtocol = $TLS12Protocol
