@@ -24,7 +24,7 @@
     This parameter must not be specified when running.
 .EXAMPLE
     Build-AVIBImage `
-        -BuildVersion "1.0.1" `
+        -BuildVersion "1.0.2" `
         -ImageResourceGroup "rg-vmimagebuilder" `
         -StagingImageResourceGroup "rg-vmimagebuilder-staging" `
         -TemplateFilePath "./windows_11_gen2_generic/windows_11_gen2_generic.json"

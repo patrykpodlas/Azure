@@ -162,9 +162,9 @@ function Build-AVIBEnvironment {
         }
 
         # Create a resource group for all the resources related to Azure VM Image Builder.
-        Write-Verbose "Creating resource group: $ImageResourceGroup" ; New-AzResourceGroup -Name $ImageResourceGroup -Location $Location
+        Write-Verbose "Creating resource group: $ImageResourceGroup." ; New-AzResourceGroup -Name $ImageResourceGroup -Location $Location
         # Create a staging resource for the temporary resources created as part of the image build process.
-        Write-Verbose "Creating resource group: $StagingImageResourceGroup" ; New-AzResourceGroup -Name $StagingImageResourceGroup -Location $Location
+        Write-Verbose "Creating resource group: $StagingImageResourceGroup." ; New-AzResourceGroup -Name $StagingImageResourceGroup -Location $Location
         # Create Azure Compute Gallery.
         Write-Verbose "Creating Azure Compute Gallery: $GalleryName in resource group $ImageResourceGroup" ; New-AzGallery -GalleryName $GalleryName -ResourceGroupName $ImageResourceGroup -Location $Location
         # Create Azure Compute Gallery image definition.

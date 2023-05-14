@@ -6,7 +6,7 @@
 .EXAMPLE
     Build-AVIBTemplate `
         -TemplateFilePath "./image_templates/windows_11_gen2_generic.json" `
-        -SubscriptionID "" `
+        -SubscriptionID "90d37faa-db88-499e-bf2e-017adb899816" `
         -ImageResourceGroup "rg-vmimagebuilder" `
         -StagingImageResourceGroup "rg-vmimagebuilder-staging" `
         -Location "uksouth" `
