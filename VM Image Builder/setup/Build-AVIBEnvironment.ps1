@@ -202,11 +202,12 @@ function Build-AVIBEnvironment {
         # Assign the roles to the user managed identity.
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $ImageRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup"
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $NetworkRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$vNetResourceGroup"
-        #New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $ImageRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
-        #New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $NetworkRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
+        New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
+        #New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $ImageRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup" # Don't think this is required - to be reviewed.
+        #New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $NetworkRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup" # Don't think this is required - to be reviewed.
         # Assign the Contributor role to the Azure VM Image Builder App on the staging resource group scope.
-        #New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
-        #New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup"
+        New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup" # This is required as per ducmentation.
+        #New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup" # Don't think this is required - to be reviewed.
     }
 
     end {
