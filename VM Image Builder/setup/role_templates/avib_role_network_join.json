@@ -1,5 +1,5 @@
 {
-    "Name": "Developer Azure Image Builder Network Definition",
+    "Name": "Azure Image Builder Network Definition",
     "IsCustom": true,
     "Description": "Image Builder access to create resources for the image build",
     "Actions": [

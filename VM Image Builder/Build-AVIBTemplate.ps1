@@ -1,10 +1,12 @@
 <#
 .SYNOPSIS
     Replaces the necessary parameters in the .JSON template file, ready for submission using the Build-AVIBImage function.
+.PARAMETER SubscriptionID
+    You must provide subscription ID to work with.
 .EXAMPLE
     Build-AVIBTemplate `
-        -TemplateFilePath "/Azure/VM Image Builder/image_templates/windows_11_gen2_generic.json" `
-        -SubscriptionID "" ` # Provide your Azure Subscription ID.
+        -TemplateFilePath "./image_templates/windows_11_gen2_generic.json" `
+        -SubscriptionID "" `
         -ImageResourceGroup "rg-vmimagebuilder" `
         -StagingImageResourceGroup "rg-vmimagebuilder-staging" `
         -Location "uksouth" `

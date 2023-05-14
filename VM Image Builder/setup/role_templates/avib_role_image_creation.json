@@ -1,5 +1,5 @@
 {
-    "Name": "Developer Azure Image Builder Image Definition",
+    "Name": "Azure Image Builder Image Definition",
     "IsCustom": true,
     "Description": "Image Builder access to create resources for the image build, you should delete or split out as appropriate",
     "Actions": [

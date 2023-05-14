@@ -24,10 +24,10 @@
     This parameter must not be specified when running.
 .EXAMPLE
     Build-AVIBImage `
-        -BuildVersion "1.0.0" `
+        -BuildVersion "1.0.1" `
         -ImageResourceGroup "rg-vmimagebuilder" `
-        -StagingImageResourceGroup "rg-vmimagebuilder-staging"
-        -TemplateFilePath "/Azure/VM Image Builder/windows_11_gen2_generic/windows_11_gen2_generic.json" `
+        -StagingImageResourceGroup "rg-vmimagebuilder-staging" `
+        -TemplateFilePath "./windows_11_gen2_generic/windows_11_gen2_generic.json"
 .NOTES
     Author: Patryk Podlas
     Created: 20/04/2023
@@ -38,7 +38,7 @@
     13/05/2023      PP          1.1     Few minor changes, removed the svclocation parameter as it was redundant.
 #>
 
-function Build-Image {
+function Build-AVIBImage {
     [CmdletBinding()]
     param (
         [parameter(Mandatory)]
