@@ -34,7 +34,7 @@ Build-AVIBEnvironment `
     -GalleryName "cgvmibimages" `
     -ImageDefinitionName "windows_11_gen2_generic" `
     -VMGeneration "V2" `
-    -ImageRoleDefinitionName "Azure Image Builder Image Definition" `
+    -ImageRoleDefinitionName "Azure Image Builder Image Creation Definition" `
     -NetworkRoleDefinitionName "Azure Image Builder Network Definition" `
     -AVIBRoleNetworkJoinPath "avib_role_network_join.json" `
     -AVIBRoleImageCreationPath "avib_role_image_creation.json" `
@@ -185,29 +185,28 @@ function Build-AVIBEnvironment {
         # Create user managed identity.
         New-AzUserAssignedIdentity -ResourceGroupName $ImageResourceGroup -Name $IdentityName -Location $Location ; Start-Sleep -Seconds 60
         $IdentityNamePrincipalId = $(Get-AzUserAssignedIdentity -ResourceGroupName $ImageResourceGroup -Name $IdentityName).PrincipalId
+
         # Update the role template with the idenity information and roles.
-        ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace 'Azure Image Builder Service Image Creation Role', $ImageRoleDefinitionName) | Set-Content -Path $AVIBRoleImageCreationPath
-        ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace 'Azure Image Builder Service Networking Role', $NetworkRoleDefinitionName) | Set-Content -Path $AVIBRoleNetworkJoinPath
+        ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace 'Azure Image Builder Image Creation Definition', $ImageRoleDefinitionName) | Set-Content -Path $AVIBRoleImageCreationPath
+        ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace 'Azure Image Builder Network Join Definition', $NetworkRoleDefinitionName) | Set-Content -Path $AVIBRoleNetworkJoinPath
+
         # Update role definitions .JSON template file.
         ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace '<SubscriptionID>', $SubscriptionID) | Set-Content -Path $AVIBRoleNetworkJoinPath
         ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace '<vNETResourceGroup>', $vNetResourceGroup) | Set-Content -Path $AVIBRoleNetworkJoinPath
-        #((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace '<StagingImageResourceGroup>', $StagingImageResourceGroup) | Set-Content -Path $AVIBRoleNetworkJoinPath
         ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace '<SubscriptionID>', $SubscriptionID) | Set-Content -Path $AVIBRoleImageCreationPath
         ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace '<ImageResourceGroup>', $ImageResourceGroup) | Set-Content -Path $AVIBRoleImageCreationPath
-        #((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace '<StagingImageResourceGroup>', $StagingImageResourceGroup) | Set-Content -Path $AVIBRoleImageCreationPath
 
         # Create role definitions.
         New-AzRoleDefinition -InputFile  "./$AVIBRoleImageCreationPath"
         New-AzRoleDefinition -InputFile  "./$AVIBRoleNetworkJoinPath"
+
         # Assign the roles to the user managed identity.
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $ImageRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup"
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $NetworkRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$vNetResourceGroup"
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
-        #New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $ImageRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup" # Don't think this is required - to be reviewed.
-        #New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $NetworkRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup" # Don't think this is required - to be reviewed.
+
         # Assign the Contributor role to the Azure VM Image Builder App on the staging resource group scope.
-        New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup" # This is required as per ducmentation.
-        #New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup" # Don't think this is required - to be reviewed.
+        New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
     }
 
     end {
