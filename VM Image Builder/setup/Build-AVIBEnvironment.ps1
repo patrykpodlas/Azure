@@ -35,7 +35,7 @@ Build-AVIBEnvironment `
     -ImageDefinitionName "windows_11_gen2_generic" `
     -VMGeneration "V2" `
     -ImageRoleDefinitionName "Azure Image Builder Image Creation Definition" `
-    -NetworkRoleDefinitionName "Azure Image Builder Network Definition" `
+    -NetworkRoleDefinitionName "Azure Image Builder Network Join Definition" `
     -AVIBRoleNetworkJoinPath "avib_role_network_join.json" `
     -AVIBRoleImageCreationPath "avib_role_image_creation.json" `
     -IdentityName "umi-vmimagebuilder" `
@@ -208,6 +208,6 @@ function Build-AVIBEnvironment {
 
     end {
         Write-Verbose "Cleaning up the temporary role template files."
-        Get-Item -Path .\avib_role_image_creation.json, ./avib_role_network_join.json | Remove-Item
+        Get-Item -Path ./avib_role_image_creation.json, ./avib_role_network_join.json | Remove-Item
     }
 }
