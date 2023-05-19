@@ -36,8 +36,6 @@ Build-AVIBEnvironment `
     -VMGeneration "V2" `
     -ImageRoleDefinitionName "Azure Image Builder Image Creation Definition" `
     -NetworkRoleDefinitionName "Azure Image Builder Network Join Definition" `
-    -AVIBRoleNetworkJoinPath "avib_role_network_join.json" `
-    -AVIBRoleImageCreationPath "avib_role_image_creation.json" `
     -IdentityName "umi-vmimagebuilder" `
     -RunOutputName "windows_11_gen2_generic" `
     -vNETName "vnet-vmimagebuilder" `
@@ -80,13 +78,7 @@ function Build-AVIBEnvironment {
         $ImageRoleDefinitionName,
         [parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
-        $AVIBRoleImageCreationPath,
-        [parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
         $NetworkRoleDefinitionName,
-        [parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        $AVIBRoleNetworkJoinPath,
         [parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]
         $IdentityName,
@@ -111,9 +103,6 @@ function Build-AVIBEnvironment {
         # Set the TLS version.
         $TLS12Protocol = [System.Net.SecurityProtocolType] 'Tls12'
         [System.Net.ServicePointManager]::SecurityProtocol = $TLS12Protocol
-
-        # Copy templates from the templates folder.
-        Get-ChildItem -Path "./role_templates" | Copy-item -Destination "."
 
         # Install required module and import it.
         Install-Module -Name Az.ManagedServiceIdentity -Confirm:$False -Force
@@ -183,19 +172,39 @@ function Build-AVIBEnvironment {
         New-AzUserAssignedIdentity -ResourceGroupName $ImageResourceGroup -Name $IdentityName -Location $Location ; Start-Sleep -Seconds 60
         $IdentityNamePrincipalId = $(Get-AzUserAssignedIdentity -ResourceGroupName $ImageResourceGroup -Name $IdentityName).PrincipalId
 
-        # Update the role template with the idenity information and roles.
-        ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace 'Azure Image Builder Image Creation Definition', $ImageRoleDefinitionName) | Set-Content -Path $AVIBRoleImageCreationPath
-        ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace 'Azure Image Builder Network Join Definition', $NetworkRoleDefinitionName) | Set-Content -Path $AVIBRoleNetworkJoinPath
+        # Create Azure Image Builder Image Creation Definition
+        $Role = [Microsoft.Azure.Commands.Resources.Models.Authorization.PSRoleDefinition]::new()
+        $Role.Name = $ImageRoleDefinitionName
+        $Role.Description = 'Image Builder access to create resources for the image build'
+        $Role.IsCustom = $true
+        $Permissions = @(
+            'Microsoft.Compute/virtualMachines/deallocate/action'
+            "Microsoft.Compute/galleries/read",
+            "Microsoft.Compute/galleries/images/read",
+            "Microsoft.Compute/galleries/images/versions/read",
+            "Microsoft.Compute/galleries/images/versions/write",
+            "Microsoft.Compute/images/write",
+            "Microsoft.Compute/images/read",
+            "Microsoft.Compute/images/delete"
+        )
+        $Role.Actions = $Permissions
+        $Subs = "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup"
+        $Role.AssignableScopes = $Subs
+        New-AzRoleDefinition -Role $Role
 
-        # Update role definitions .JSON template file.
-        ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace '<SubscriptionID>', $SubscriptionID) | Set-Content -Path $AVIBRoleNetworkJoinPath
-        ((Get-Content -Path $AVIBRoleNetworkJoinPath -Raw) -replace '<vNETResourceGroup>', $vNetResourceGroup) | Set-Content -Path $AVIBRoleNetworkJoinPath
-        ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace '<SubscriptionID>', $SubscriptionID) | Set-Content -Path $AVIBRoleImageCreationPath
-        ((Get-Content -Path $AVIBRoleImageCreationPath -Raw) -replace '<ImageResourceGroup>', $ImageResourceGroup) | Set-Content -Path $AVIBRoleImageCreationPath
-
-        # Create role definitions.
-        New-AzRoleDefinition -InputFile  "./$AVIBRoleImageCreationPath"
-        New-AzRoleDefinition -InputFile  "./$AVIBRoleNetworkJoinPath"
+        # Create Azure Image Builder Network Join Definition
+        $Role = [Microsoft.Azure.Commands.Resources.Models.Authorization.PSRoleDefinition]::new()
+        $Role.Name = $NetworkRoleDefinitionName
+        $Role.Description = 'Image Builder access to create resources for the image build'
+        $Role.IsCustom = $true
+        $Permissions = @(
+            "Microsoft.Network/virtualNetworks/read",
+            "Microsoft.Network/virtualNetworks/subnets/join/action"
+        )
+        $Role.Actions = $Permissions
+        $Subs = "/subscriptions/$SubscriptionID/resourceGroups/$vNetResourceGroup"
+        $Role.AssignableScopes = $Subs
+        New-AzRoleDefinition -Role $Role
 
         # Assign the roles to the user managed identity.
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $ImageRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup"
@@ -207,7 +216,24 @@ function Build-AVIBEnvironment {
     }
 
     end {
-        Write-Verbose "Cleaning up the temporary role template files."
-        Get-Item -Path ./avib_role_image_creation.json, ./avib_role_network_join.json | Remove-Item
+
     }
 }
+
+Build-AVIBEnvironment `
+    -Location "uksouth" `
+    -ImageResourceGroup "rg-vmimagebuilder" `
+    -StagingImageResourceGroup "rg-vmimagebuilder-staging" `
+    -vNetResourceGroup "rg-vmimagebuilder" `
+    -GalleryName "cgvmibimages" `
+    -ImageDefinitionName "windows_11_gen2_generic" `
+    -VMGeneration "V2" `
+    -ImageRoleDefinitionName "Azure Image Builder Image Creation Definition" `
+    -NetworkRoleDefinitionName "Azure Image Builder Network Join Definition" `
+    -IdentityName "umi-vmimagebuilder" `
+    -RunOutputName "windows_11_gen2_generic" `
+    -vNETName "vnet-vmimagebuilder" `
+    -SubnetName "snet-vnet-vmimagebuilder" `
+    -NSGName "nsg-snet-vmimagebuilder" `
+    -CompanyName "Company" `
+    -Verbose
