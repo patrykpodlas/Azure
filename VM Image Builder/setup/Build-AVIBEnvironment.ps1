@@ -50,6 +50,7 @@ Build-AVIBEnvironment `
     Change history:
     Date            Author      V       Notes
     04/05/2023      PP          1.0     First release
+    19/05/2023      PP          1.1     Update to the role definition creation process.
 #>
 function Build-AVIBEnvironment {
     [CmdletBinding()]
@@ -210,7 +211,6 @@ function Build-AVIBEnvironment {
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $ImageRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$ImageResourceGroup"
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName $NetworkRoleDefinitionName -Scope "/subscriptions/$SubscriptionID/resourceGroups/$vNetResourceGroup"
         New-AzRoleAssignment -ObjectId $IdentityNamePrincipalId -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
-
         # Assign the Contributor role to the Azure VM Image Builder App on the staging resource group scope.
         New-AzRoleAssignment -ObjectId $VMIBAppServicePrincipal.Id -RoleDefinitionName "Contributor" -Scope "/subscriptions/$SubscriptionID/resourceGroups/$StagingImageResourceGroup"
     }
@@ -219,21 +219,3 @@ function Build-AVIBEnvironment {
 
     }
 }
-
-Build-AVIBEnvironment `
-    -Location "uksouth" `
-    -ImageResourceGroup "rg-vmimagebuilder" `
-    -StagingImageResourceGroup "rg-vmimagebuilder-staging" `
-    -vNetResourceGroup "rg-vmimagebuilder" `
-    -GalleryName "cgvmibimages" `
-    -ImageDefinitionName "windows_11_gen2_generic" `
-    -VMGeneration "V2" `
-    -ImageRoleDefinitionName "Azure Image Builder Image Creation Definition" `
-    -NetworkRoleDefinitionName "Azure Image Builder Network Join Definition" `
-    -IdentityName "umi-vmimagebuilder" `
-    -RunOutputName "windows_11_gen2_generic" `
-    -vNETName "vnet-vmimagebuilder" `
-    -SubnetName "snet-vnet-vmimagebuilder" `
-    -NSGName "nsg-snet-vmimagebuilder" `
-    -CompanyName "Company" `
-    -Verbose
