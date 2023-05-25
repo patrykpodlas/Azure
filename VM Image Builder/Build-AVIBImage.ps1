@@ -25,6 +25,7 @@
 .EXAMPLE
     Build-AVIBImage `
         -BuildVersion "1.0.0" `
+        -ImageTemplateName "windows_11_gen2_generic"
         -ImageResourceGroup "rg-vmimagebuilder" `
         -StagingImageResourceGroup "rg-vmimagebuilder-staging" `
         -TemplateFilePath "./windows_11_gen2_generic/windows_11_gen2_generic.json"
@@ -54,11 +55,18 @@ function Build-AVIBImage {
         [ValidateNotNullOrEmpty()]
         [string]$TemplateFilePath, # Use the previously generated template path.
         [ValidateNotNullOrEmpty()]
-        [string]$ImageTemplateName = "windows_11_gen2_generic_v" + $($BuildVersion) # This will be a parameter passed onto the .JSON file, and become the name of the template submitted to Azure VM Image Builder.
+        [string]$ImageTemplateName # This will be a parameter passed onto the .JSON file, and become the name of the template submitted to Azure VM Image Builder.
 
     )
 
+    #Requires -Modules Az, Az-ImageBuilder
+
     begin {
+        # Import Modules
+        Import-Module -Name Az, Az.ImageBuilder
+        # Image Template string.
+        $ImageTemplateName = "$($ImageTemplateName)" + "_v$($BuildVersion)"
+        # API version and time integer.
         $APIVersion = "2022-02-14" # For a list of available API's visit: https://learn.microsoft.com/en-us/azure/templates/microsoft.virtualmachineimages/2022-02-14/imagetemplates?pivots=deployment-language-arm-template#arm-template-resource-definition
         [int]$Time = "0"
         # Check for existing template submissions.
@@ -72,19 +80,17 @@ function Build-AVIBImage {
         foreach ($Submission in $CurrentSubmissions) {
             $CurrentState = $Submission.LastRunStatusRunState
             if ($CurrentState -in $ListOfStatuses) {
-                Write-Output "The state of job: $($Submission.Name) prevents the build from continuation."
-                Exit
+                Throw "The state of job: $($Submission.Name) prevents the build from continuation."
             }
         }
         # Check if the about to be submitted template name already exists, which is unsupported.
         if ($CurrentSubmissions | Where-Object Name -eq $ImageTemplateName) {
-            Write-Output "The template $($ImageTemplateName) already exists, this action is unsupported. Change the submitted template name or delete existing and re-try."
-            Exit
+            Throw "The template $($ImageTemplateName) already exists, this action is unsupported. Change the submitted template name or delete existing and re-try."
         }
         # Check for storage account existance in the resource group and delete it if present.
         if ($CurrentSubmissions.LastRunStatusRunState -notin $ListOfStatuses) {
             if (Get-AzStorageAccount -ResourceGroupName $StagingImageResourceGroup) {
-                Write-Output "Temporary storage account is present in the resource group for troubleshooting purposes, are you sure you want to delete it?"
+                Write-Warning "Temporary storage account is present in the resource group for troubleshooting purposes, are you sure you want to delete it?"
                 Get-AzStorageAccount -ResourceGroupName $StagingImageResourceGroup | Remove-AzStorageAccount
             }
         }
