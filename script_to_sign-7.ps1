@@ -1,2 +1,0 @@
-#sign-me
-Get-Location
