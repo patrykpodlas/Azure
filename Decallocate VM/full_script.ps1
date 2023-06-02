@@ -1,3 +1,4 @@
+#sign-me
 <#
 .SYNOPSIS
     Creates a scheduled task that will de-allocate the VM when the logged in user logs off, should another not be logged in at the same time.
