@@ -1,3 +1,4 @@
+#sign-me
 function Set-ManagedIdentity {
     [CmdletBinding()]
     param (
