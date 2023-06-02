@@ -1,2 +1,2 @@
 #sign-me
-Write-Output "4"
+Write-Output "3"
