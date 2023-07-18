@@ -1,3 +1,7 @@
+# Script must run as startup with the following parameters
+# -Noninteractive -ExecutionPolicy Bypass -Noprofile
+# Share must be configured to allow Everyone, file NTFS permissions containing "domain computers" - modify, with no permission to delete
+
 $script = @'
 <#PSScriptInfo
 
